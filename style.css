@@ -1,3 +1,56 @@
+body {
+  display: grid;
+  place-content: start center;
+  padding: 20px;
+  gap: 20px;
+}
+
 #root {
-  color: red;
+  font-family: "Poppins", sans-serif;
+}
+
+.container {
+  --cols: 2;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), 1fr);
+  gap: 20px;
+}
+
+@media (min-width: 720px) {
+  .container {
+    --cols: 4;
+  }
+}
+
+@media (min-width: 1200px) {
+  .container {
+    --cols: 6;
+  }
+}
+
+.episode-card {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  padding: 3px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  color: white;
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.episode-image {
+  width: 100%;
+  display: block;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.footer {
+  text-align: center;
+  border: 1px solid black;
+  padding: 10px;
+  margin-top: auto; /* 🔑 pushes footer to bottom */
 }
