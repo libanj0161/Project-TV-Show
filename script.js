@@ -17,6 +17,9 @@ function makePageForEpisodes(episodeList) {
   const mainElem = document.createElement("main");
   mainElem.classList.add("container");
 
+  const count = document.getElementById("count");
+  count.textContent = `Displaying ${episodeList.length}/${allEpisodes.length}`;
+
   episodeList.forEach((episode) => {
     const { name, season, number, image, summary } = episode;
     const paddedSeason = String(season).padStart(2, "0");
@@ -34,8 +37,6 @@ function makePageForEpisodes(episodeList) {
   `;
     mainElem.appendChild(episodeDiv);
     rootElem.appendChild(mainElem);
-    const count = document.getElementById("count");
-    count.textContent = `Displaying ${episodeList.length}/${allEpisodes.length}`;
   });
 }
 function populateEpisodeSelector(episodeList) {
