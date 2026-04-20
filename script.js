@@ -1,14 +1,25 @@
 //You can edit ALL of the code here
 let allEpisodes = [];
 function setup() {
-  allEpisodes = getAllEpisodes();
-  makePageForEpisodes(allEpisodes);
-  populateEpisodeSelector(allEpisodes);
+  fetch("https://api.tvmaze.com/shows/82/episodes")
+    .then((response) => response.json())
+    .then((episodes) => {
+      allEpisodes = episodes; // ✅ updates the outer variable
+      makePageForEpisodes(allEpisodes);
+      populateEpisodeSelector(allEpisodes);
 
-  const search = document.getElementById("search");
-  search.addEventListener("input", searchEpisode);
-  const selector = document.getElementById("selector");
-  selector.addEventListener("change", selectEpisode);
+      const search = document.getElementById("search");
+      search.addEventListener("input", searchEpisode);
+      const selector = document.getElementById("selector");
+      selector.addEventListener("change", selectEpisode);
+    })
+    .catch((error) => {
+      const rootElem = document.getElementById("root");
+      rootElem.innerHTML = `
+        <p class="error">Oops! Could not load page.</p>
+      `;
+      console.error("Fetch error:", error);
+    });
 }
 
 function makePageForEpisodes(episodeList) {
