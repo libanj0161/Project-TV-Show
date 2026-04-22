@@ -1,25 +1,83 @@
-//You can edit ALL of the code here
 let allEpisodes = [];
+let showsCache = {}; // Cache: showId -> episodes array
+let showsData = []; // All shows from API
+
 function setup() {
-  fetch("https://api.tvmaze.com/shows/82/episodes")
+  fetch("https://api.tvmaze.com/shows")
     .then((response) => response.json())
-    .then((episodes) => {
-      allEpisodes = episodes; // ✅ updates the outer variable
-      makePageForEpisodes(allEpisodes);
-      populateEpisodeSelector(allEpisodes);
+    .then((shows) => {
+      showsData = shows.sort((a, b) =>
+        a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+      );
+      populateShowSelector(showsData);
+
+      const showSelector = document.getElementById("show-selector");
+      showSelector.addEventListener("change", selectShow);
 
       const search = document.getElementById("search");
       search.addEventListener("input", searchEpisode);
+
       const selector = document.getElementById("selector");
       selector.addEventListener("change", selectEpisode);
+
+      // Load the first show by default
+      const firstShowId = showsData[0].id;
+      showSelector.value = firstShowId;
+      loadEpisodesForShow(firstShowId);
     })
     .catch((error) => {
       const rootElem = document.getElementById("root");
-      rootElem.innerHTML = `
-        <p class="error">Oops! Could not load page.</p>
-      `;
+      rootElem.innerHTML = `<p class="error">Oops! Could not load shows.</p>`;
       console.error("Fetch error:", error);
     });
+}
+
+function populateShowSelector(shows) {
+  const showSelector = document.getElementById("show-selector");
+  showSelector.innerHTML = "";
+
+  shows.forEach((show) => {
+    const option = document.createElement("option");
+    option.value = show.id;
+    option.textContent = show.name;
+    showSelector.appendChild(option);
+  });
+}
+
+function loadEpisodesForShow(showId) {
+  // Use cache if already fetched
+  if (showsCache[showId]) {
+    allEpisodes = showsCache[showId];
+    makePageForEpisodes(allEpisodes);
+    populateEpisodeSelector(allEpisodes);
+    resetControls();
+    return;
+  }
+
+  fetch(`https://api.tvmaze.com/shows/${showId}/episodes`)
+    .then((response) => response.json())
+    .then((episodes) => {
+      showsCache[showId] = episodes; // Cache the result
+      allEpisodes = episodes;
+      makePageForEpisodes(allEpisodes);
+      populateEpisodeSelector(allEpisodes);
+      resetControls();
+    })
+    .catch((error) => {
+      const rootElem = document.getElementById("root");
+      rootElem.innerHTML = `<p class="error">Oops! Could not load episodes.</p>`;
+      console.error("Fetch error:", error);
+    });
+}
+
+function resetControls() {
+  document.getElementById("search").value = "";
+  document.getElementById("selector").value = "all";
+}
+
+function selectShow(event) {
+  const showId = event.target.value;
+  loadEpisodesForShow(showId);
 }
 
 function makePageForEpisodes(episodeList) {
@@ -39,17 +97,16 @@ function makePageForEpisodes(episodeList) {
     const episodeDiv = document.createElement("div");
     episodeDiv.classList.add("episode-card");
     episodeDiv.innerHTML = `
-    <h2 class="title">${name} - S${paddedSeason}E${paddedNumber}</h2>
-    <img
-  class="episode-image"
-  src="${image.medium}"
-  alt="episode image" />
-  ${summary} 
-  `;
+      <h2 class="title">${name} - S${paddedSeason}E${paddedNumber}</h2>
+      <img class="episode-image" src="${image?.medium ?? ""}" alt="episode image" />
+      ${summary ?? ""}
+    `;
     mainElem.appendChild(episodeDiv);
-    rootElem.appendChild(mainElem);
   });
+
+  rootElem.appendChild(mainElem);
 }
+
 function populateEpisodeSelector(episodeList) {
   const select = document.getElementById("selector");
   select.innerHTML = '<option value="all">All Episodes</option>';
@@ -67,13 +124,12 @@ function populateEpisodeSelector(episodeList) {
 }
 
 function searchEpisode(event) {
-  const searchTerm = event.target.value;
+  const searchTerm = event.target.value.toLowerCase();
   const filteredEpisodes = allEpisodes.filter(
     (episode) =>
       episode.name.toLowerCase().includes(searchTerm) ||
-      episode.summary.toLowerCase().includes(searchTerm),
+      episode.summary?.toLowerCase().includes(searchTerm),
   );
-
   makePageForEpisodes(filteredEpisodes);
 }
 
