@@ -1,25 +1,77 @@
 //You can edit ALL of the code here
 let allEpisodes = [];
+let allShows = [];
+let currentShowId = 82; 
+let cache = {};// Default to "Game of Thrones"
+
 function setup() {
-  fetch("https://api.tvmaze.com/shows/82/episodes")
+  fetch ("https://api.tvmaze.com/shows")
+  .then((response) => response.json())
+  .then((shows) => {
+    allShows = shows;
+
+    shows.sort((a,b) =>
+    a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+  );
+
+  populateShowSelector(shows);
+  fetchEpisodes(currentShowId);
+  
+});
+}
+function fetchEpisodes (ShowId) {
+  const url = `https://api.tvmaze.com/shows/${ShowId}/episodes`;
+  
+  if (cache[url]) {
+    allEpisodes = cache[url]; // ✅ updates the outer variable
+    makePageForEpisodes(allEpisodes);
+    populateEpisodeSelector(allEpisodes);
+    return;
+  }
+
+  fetch(url)
     .then((response) => response.json())
     .then((episodes) => {
+      cache[url] = episodes; // Cache the episodes for future use
+
       allEpisodes = episodes; // ✅ updates the outer variable
       makePageForEpisodes(allEpisodes);
       populateEpisodeSelector(allEpisodes);
-
-      const search = document.getElementById("search");
-      search.addEventListener("input", searchEpisode);
-      const selector = document.getElementById("selector");
-      selector.addEventListener("change", selectEpisode);
     })
+
     .catch((error) => {
       const rootElem = document.getElementById("root");
       rootElem.innerHTML = `
-        <p class="error">Oops! Could not load page.</p>
+        <p class="error">Oops! Could not load episodes.</p>
       `;
       console.error("Fetch error:", error);
     });
+  
+  }
+
+function populateShowSelector(shows) {
+  const select = document.getElementById("show-selector");
+  select.innerHTML = "";
+
+  shows.forEach((show) => {
+    const option = document.createElement("option");
+    option.textContent = show.name;
+    option.value = show.id;
+    select.appendChild(option);
+  });
+  
+  select.addEventListener("change", handleShowChange);
+
+  select.value = currentShowId; 
+}
+
+function handleShowChange(event) {
+  currentShowId = Number(event.target.value);
+
+  document.getElementById("search").value = "";
+  document.getElementById("selector").value = "all";
+  
+  fetchEpisodes (currentShowId);
 }
 
 function makePageForEpisodes(episodeList) {
@@ -42,9 +94,9 @@ function makePageForEpisodes(episodeList) {
     <h2 class="title">${name} - S${paddedSeason}E${paddedNumber}</h2>
     <img
   class="episode-image"
-  src="${image.medium}"
+  src="${image?.medium ||''}"
   alt="episode image" />
-  ${summary} 
+  ${summary || ''}
   `;
     mainElem.appendChild(episodeDiv);
     rootElem.appendChild(mainElem);
@@ -67,11 +119,11 @@ function populateEpisodeSelector(episodeList) {
 }
 
 function searchEpisode(event) {
-  const searchTerm = event.target.value;
+  const searchTerm = event.target.value.toLowerCase();
   const filteredEpisodes = allEpisodes.filter(
     (episode) =>
       episode.name.toLowerCase().includes(searchTerm) ||
-      episode.summary.toLowerCase().includes(searchTerm),
+      (episode.summary || "").toLowerCase().includes(searchTerm),
   );
 
   makePageForEpisodes(filteredEpisodes);
