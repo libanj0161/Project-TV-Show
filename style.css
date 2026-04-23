@@ -47,6 +47,13 @@ body {
   margin-bottom: 10px;
 }
 
+.error {
+  color: #e8d5c4;
+  text-align: center;
+  font-size: 18px;
+  margin-top: 50px;
+}
+
 .footer {
   text-align: center;
   border: 1px solid black;
