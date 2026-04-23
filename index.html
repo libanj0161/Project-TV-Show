@@ -13,9 +13,14 @@
   </head>
 
   <body>
-    <div id="controls">
-      <select name="episode selector" id="selector"></select>
-      <input name="search item" id="search" type="text" />
+    <div id="show-search-controls">
+      <input id="show-search" type="text" placeholder="Search shows..." />
+    </div>
+
+    <div id="episode-controls" style="display: none">
+      <button id="back-to-shows">← All Shows</button>
+      <select id="selector"></select>
+      <input id="search" type="text" placeholder="Search episodes..." />
       <p id="count"></p>
     </div>
     <div id="root"></div>
